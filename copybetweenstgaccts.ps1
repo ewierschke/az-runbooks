@@ -38,7 +38,8 @@ param
 <#
 Azure Automation Account needs the following modules updated/imported prior to
 executing this Runbook (typically available in the Modules gallery):
-Az.Accounts, AzureRM.Storage (default modules in new Automation Accounts)
+#need to verify
+Az.Accounts, Az.Automation, Az.Storage 
 
 Azure Automation Account Variables need to be created before execution, with 
 names 'SubscriptionId' - String (unencrypted) 
@@ -55,7 +56,7 @@ $containerName = "<sourceanddestinationcontainername>"
 ###update the above variables
 
 #Do Not modify these variables
-$SubId = Get-AutomationVariable -Name 'SubscriptionId'
+$SubId = Get-AzAutomationVariable -Name 'SubscriptionId'
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"
 
