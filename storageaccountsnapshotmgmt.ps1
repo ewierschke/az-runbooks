@@ -151,7 +151,7 @@ foreach ($container in $containers)
   $currentcontainer = Get-AzureStorageContainer -Context $Ctx -Name $container[$x].Name
   $ListOfBlobs = $currentcontainer.CloudBlobContainer.ListBlobs($BlobName, $true, "Snapshots")
   #Get all blobs with more than one snapshot
-  $baseBlobWithMoreThanOneSnapshot = $container.CloudBlobContainer.ListBlobs($BlobName, $true, "Snapshots") | Group-Object Name | Where-Object {$_.Count -gt 1} | Select Name
+  $baseBlobWithMoreThanOneSnapshot = $container.CloudBlobContainer.ListBlobs($BlobName, $true, "Snapshots") | Group-Object Name | Where-Object {$_.Count -gt 1} | Select-Object Name
   #Filter blobs with more than one snapshot and only get snapshots.
   $blobs = $ListOfblobs | Where-Object {$baseBlobWithMoreThanOneSnapshot  -match $_.Name -and $_.SnapshotTime -ne $null} | Sort-Object SnapshotTime -Descending
 
