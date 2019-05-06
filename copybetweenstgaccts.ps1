@@ -192,8 +192,8 @@ $destblobsArray = Get-AzStorageBlob -Container $containerName -Context $destCont
 $onlyindest = Compare-Object -ReferenceObject $blobsArray.Name -DifferenceObject $destblobsArray.Name -Passthru
 if ($onlyindest) {
     Write-Output "##########"
-    Write-Output "***The following files were pre-existing in the destination but were not in the source."
-    Write-Output "***Investigate whether the files are still needed." 
+    Write-Output "***The following blobs were pre-existing in the destination but were not in the source."
+    Write-Output "***Investigate whether the blobs are still needed." 
     foreach($destblob in $onlyindest) {
         $destblobname = $destblob
         Write-Output "- $destblobname"
