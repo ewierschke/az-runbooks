@@ -1,10 +1,11 @@
 <# 
 .SYNOPSIS 
-   Copy blobs in a container from the one storage account to a different storage account.  Updates blob if source has newer version. 
+   Copy blobs in a container from the one storage account in one AAD tenant to a different storage account in a different AAD tenant.
+   Updates blob if source has newer version. 
 .DESCRIPTION 
    Start's an asynchronous copy of blob to a different storage account. 
-.EXAMPLE 
-   .\copybetweenstgaccts.ps1  
+.EXAMPLE (need to update)
+   .\copybetweenstgacctsdiffaad-async.ps1  
          -AzSubscription "Azure Subscription"  
          -srcStorageAccount "Source Storage Account name" 
          -srcStorageRg "Source Storage Resource Group" 
@@ -49,9 +50,9 @@ $dest_Environment_Name = "<AzureCloud or AzureUSGovernment>"
 $destStorageRg = "<destinationresourcegroupname>"
 $destStorageAccountName = "<destinationstorageaccountname>"
 
-
 ### Source/Dest Container Name ### 
 $containerName = "<sourceanddestinationcontainername>"
+
 #Context file variables
 $scriptRoot = "$env:Temp"
 $sourcecontextpath = "${scriptRoot}\sourcecontext.json"
