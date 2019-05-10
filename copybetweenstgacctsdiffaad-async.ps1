@@ -4,6 +4,8 @@
    Updates blob if source has newer version. 
 .DESCRIPTION 
    Start's an asynchronous copy of blob to a different storage account. 
+   Uses Az Module
+   Tested in powershell 6, may need modifications to run in powershell 5.1 (ie forcing -UseDeviceAuthentication during Login-AzAccount)
 .EXAMPLE (need to update)
    .\copybetweenstgacctsdiffaad-async.ps1  
          -AzSubscription "Azure Subscription"  
@@ -43,9 +45,9 @@ $srcStorageRg = "<sourceresourcegroupname>"
 $srcStorageAccountName = "<sourcestorageaccountname>"
 
 #destination variables
-$dest_Tenant_Id = "<destinationAADtenant>"
-$dest_Subscription_Id = "<destinationSubscriptionID>"
-$dest_Environment_Name = "<AzureCloud or AzureUSGovernment>"
+#$dest_Tenant_Id = "<destinationAADtenant>"
+#$dest_Subscription_Id = "<destinationSubscriptionID>"
+#$dest_Environment_Name = "<AzureCloud or AzureUSGovernment>"
 
 $destStorageRg = "<destinationresourcegroupname>"
 $destStorageAccountName = "<destinationstorageaccountname>"
@@ -76,6 +78,7 @@ if($null -ne $current_Context){
   Login-AzAccount -EnvironmentName $source_Environment_Name -TenantId $source_Tenant_Id -Subscription $source_Subscription_Id
 }
 Write-Output "Writing source context to disk...";
+#write context to disk in order to try to avoid forced login at next invocation
 Save-AzContext -Path ${sourcecontextpath} -Force
 
 ### Create the source storage account context ### 
@@ -85,24 +88,54 @@ $srcContext = $srcStorageAccount.Context
 #Write-Output "Source storage context...";
 #$srcContext
 
+
 #create dest context
 Write-Output "Checking for destination context...";
-if (Test-Path $destcontextpath -PathType Leaf) {
-    Import-AzContext -Path ${destcontextpath}
-}
-$current_Context = Get-AzContext
-if($null -ne $current_Context){
-    if(!(($current_Context.Subscription.TenantId -match $dest_Tenant_Id) -and ($current_Context.Subscription.Id -match $dest_Subscription_Id))){
-        do{
-            Remove-AzAccount -ErrorAction SilentlyContinue | Out-Null
-            $current_Context = Get-AzContext
-        } until($null -eq $current_Context)
-        Login-AzAccount -EnvironmentName $dest_Environment_Name -TenantId $dest_Tenant_Id -Subscription $dest_Subscription_Id
+
+#Login as Automation Account's Run As Account
+$connectionName = "AzureRunAsConnection"
+try
+{
+    # Get the connection "AzureRunAsConnection "
+    $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName
+
+    "Logging in to Azure..."
+    Add-AzAccount `
+        -ServicePrincipal `
+        -TenantId $servicePrincipalConnection.TenantId `
+        -ApplicationId $servicePrincipalConnection.ApplicationId `
+        -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint `
+        -EnvironmentName $environmentName
+ }
+catch {
+    if (!$servicePrincipalConnection)
+    {
+        $ErrorMessage = "Connection $connectionName not found."
+        throw $ErrorMessage
+    } else{
+        Write-Error -Message $_.Exception
+        throw $_.Exception
     }
-} elseif ($null -eq $current_Context) {
-  Login-AzAccount -EnvironmentName $dest_Environment_Name -TenantId $dest_Tenant_Id -Subscription $dest_Subscription_Id
 }
+
+###
+#if (Test-Path $destcontextpath -PathType Leaf) {
+#    Import-AzContext -Path ${destcontextpath}
+#}
+#$current_Context = Get-AzContext
+#if($null -ne $current_Context){
+#    if(!(($current_Context.Subscription.TenantId -match $dest_Tenant_Id) -and ($current_Context.Subscription.Id -match $dest_Subscription_Id))){
+#        do{
+#            Remove-AzAccount -ErrorAction SilentlyContinue | Out-Null
+#            $current_Context = Get-AzContext
+#        } until($null -eq $current_Context)
+#        Login-AzAccount -EnvironmentName $dest_Environment_Name -TenantId $dest_Tenant_Id -Subscription $dest_Subscription_Id
+#    }
+#} elseif ($null -eq $current_Context) {
+#  Login-AzAccount -EnvironmentName $dest_Environment_Name -TenantId $dest_Tenant_Id -Subscription $dest_Subscription_Id
+#}
 Write-Output "Writing destination context to disk...";
+#write context to disk in order to try to avoid forced login at next invocation
 Save-AzContext -Path ${destcontextpath} -Force
 
 ### Create the destination storage account context ### 
@@ -121,7 +154,7 @@ try {
     New-AzStorageContainer -Name $containerName -Context $destContext 
 }
 ### need to catch if container is being deleted
-### how to check for exception name $_.exception.GetType().FullName
+### how to check for exception name $Error[0].exception.GetType().FullName
 ### exception name if dest container is still being deleted Microsoft.WindowsAzure.Storage.StorageException
 
 #troubleshooting

@@ -61,7 +61,7 @@ $SubId = Get-AzAutomationVariable -Name 'SubscriptionId'
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"
 
-#Login as Runbook
+#Login as Automation Account's Run As Account
 $connectionName = "AzureRunAsConnection"
 try
 {
