@@ -15,7 +15,7 @@
 ###################################
 ###update the below variables
 #source variables
-$source_Tenant_Id = "d29acda4-f43d-48f9-ac1f-2d37a171f805"
+$source_Tenant_Id = "<sourceAADtenant>"
 $source_Subscription_Id = "<sourceSubscriptionID>"
 $source_Environment_Name = "<AzureCloud or AzureUSGovernment or AzureGermanCloud etc>"
 
