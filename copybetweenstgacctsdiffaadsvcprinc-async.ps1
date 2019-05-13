@@ -291,5 +291,6 @@ if ($onlyindest) {
     Write-Output "##########"
 }
 
+#Comment out if running locally and want to potentially save time having to re-login for each run
 Remove-Item ${sourcecontextpath} -Force
 Remove-Item ${destcontextpath} -Force
