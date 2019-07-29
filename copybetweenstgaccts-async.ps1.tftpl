@@ -5,36 +5,6 @@
    Start's an asynchronous copy of blob to a different storage account. 
    Appears to create a 7 day read SAS for the copy operation or get status operation
 .EXAMPLE 
-   .\copybetweenstgaccts.ps1  
-         -azSubscription "Azure Subscription"  
-         -srcStorageAccount "Source Storage Account name" 
-         -srcStorageRg "Source Storage Resource Group" 
-         -destStorageAccount "Destination Storage Account name" 
-         -destStorageRg "Destination Storage Resource Group" 
-         -containername "Source and Destination Container Name"
-#> 
-<#
-param  
-( 
-    [Parameter(Mandatory = $true)] 
-    [String]$azSubscription, 
- 
-    [Parameter(Mandatory = $true)] 
-    [String]$srcStorageAccount, 
- 
-    [Parameter(Mandatory = $true)] 
-    [String]$srcStorageRg,
-
-    [Parameter(Mandatory = $true)] 
-    [String]$destStorageAccount, 
- 
-    [Parameter(Mandatory = $true)] 
-    [String]$destStorageRg,
-    
-    [Parameter(Mandatory = $true)] 
-    [String]$containerName
-) #>
-##Uncomment above param block if running as script requesting parameters
 
 <#
 Azure Automation Account needs the following modules updated/imported prior to
@@ -48,18 +18,20 @@ names 'SubscriptionId' - String (unencrypted)
 
 ###comment out below if running as script requesting parameters
 ###update the below variables
-$environment_Name = "<AzureCloud or AzureUSGovernment or AzureGermanCloud etc>"
-$srcStorageRg = "<sourceresourcegroupname>"
-$srcStorageAccountName = "<sourcestorageaccountname>"
-$destStorageRg = "<destinationresourcegroupname>"
-$destStorageAccountName = "<destinationstorageaccountname>"
+$environment_Name = "${environmentname}"
+$subID = "${subscriptionID}"
+$srcStorageRg = "${sourceresourcegroupname}"
+$srcStorageAccountName = "${sourcestorageaccountname}"
+$destStorageRg = "${destinationresourcegroupname}"
+$destStorageAccountName = "${destinationstorageaccountname}"
 ### Source/Dest Container Name ### 
-$containerName = "<sourceanddestinationcontainername>"
+$containerName = "${sourceanddestinationcontainername}"
 ###update the above variables
 
 #Do Not modify these variables
-$SubId = Get-AzAutomationVariable -Name 'SubscriptionId'
-$ErrorActionPreference = "Stop" 
+## Get-AzAutomationVariable not working for some reason
+#$SubId = Get-AzAutomationVariable -Name 'SubscriptionId'
+$ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"
 
 #Login as Automation Account's Run As Account
@@ -88,7 +60,6 @@ catch {
     }
 }
 ###Uncomment above if switching to script requesting parameters
-#$subId = $azSubscription
 Set-AzContext -Subscription $SubId
 
 ### Create the source storage account context ### 
@@ -122,7 +93,7 @@ foreach($blob in $blobsArray) {
     } catch [Microsoft.WindowsAzure.Commands.Storage.Common.ResourceNotFoundException] {
         # if blob doesn't exist, Copy blob
         $blobname = $blob.Name
-        Write-Output "Blob '${blobname}' Not Found, copying..."
+        Write-Output "Blob '$${blobname}' Not Found, copying..."
         $dontsendtoscreen3 = Start-AzStorageBlobCopy -CloudBlob $blob.ICloudBlob `
                                  -SrcContext $srcContext `
                                  -DestContainer $containerName `
@@ -157,7 +128,7 @@ foreach($blob in $blobsArray) {
     #if source is newer than dest, copy
     if ( $srcblobutcticks -gt $destblobutcticks ) {
         $blobname = $blob.Name
-        Write-Output "Newer Blob '${blobname}' found in source, copying..."
+        Write-Output "Newer Blob '$${blobname}' found in source, copying..."
         $dontsendtoscreen5 = Start-AzStorageBlobCopy -CloudBlob $blob.ICloudBlob `
                                  -SrcContext $srcContext `
                                  -DestContainer $containerName `
@@ -185,7 +156,7 @@ foreach($blob in $blobsArray) {
     }
 }
 Write-Output "##########"
-Write-Output "Script Complete.  ${newfiles} New files copied to container, ${updatedfiles} Files updated to container"
+Write-Output "Script Complete.  $${newfiles} New files copied to container, $${updatedfiles} Files updated to container"
 
 #display a list of files that exist in destination but not source
 $destblobsArray = Get-AzStorageBlob -Container $containerName -Context $destContext
